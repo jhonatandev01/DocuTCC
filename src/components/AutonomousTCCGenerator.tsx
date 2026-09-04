@@ -205,15 +205,15 @@ export const AutonomousTCCGenerator: React.FC<AutonomousTCCGeneratorProps> = ({
         <div className="relative z-10 max-w-3xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-medium mb-3">
             <Wand2 className="w-3.5 h-3.5" />
-            Motor de Automação Total em 1-Clique
+            Estruturação Inicial em 1-Clique
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-            Gerador Autônomo de Documentação de TCC
+            Assistente Estrutural de TCC
           </h2>
           <p className="text-slate-300 text-sm sm:text-base mt-2 leading-relaxed">
-            Descreva o tema, objetivos e metodologia do seu projeto. O motor de inteligência artificial
-            elaborará automaticamente todas as seções obrigatórias da monografia ou artigo, com fundamentação
-            teórica densa, citações padronizadas pela NBR 10520 e bibliografia completa em conformidade com a NBR 6023:2018.
+            Descreva o tema, objetivos e metodologia do seu projeto. O assistente de inteligência artificial
+            ajudará a elaborar automaticamente a estrutura inicial do seu trabalho, sugerindo tópicos, 
+            citações iniciais e a organização básica exigida pelas normas ABNT.
           </p>
         </div>
       </div>
@@ -477,9 +477,9 @@ export const AutonomousTCCGenerator: React.FC<AutonomousTCCGeneratorProps> = ({
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
                 <div>
-                  <p className="font-semibold">TCC Completo Gerado com Sucesso!</p>
+                  <p className="font-semibold">Esboço do Trabalho Gerado com Sucesso!</p>
                   <p className="text-xs text-emerald-200">
-                    Todas as seções, fundamentação enriquecida com dados reais, resumo, folha de rosto e referências NBR 6023 foram integradas ao seu projeto.
+                    A estrutura inicial, as sugestões de tópicos, o resumo e referências foram integradas ao seu projeto.
                   </p>
                 </div>
               </div>
@@ -565,12 +565,12 @@ export const AutonomousTCCGenerator: React.FC<AutonomousTCCGeneratorProps> = ({
             {isGenerating ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Gerando Documentação Completa...</span>
+                <span>Gerando Estrutura do Documento...</span>
               </>
             ) : (
               <>
                 <Sparkles className="w-4 h-4" />
-                <span>Gerar TCC Completo em 1-Clique</span>
+                <span>Gerar Esboço Estrutural em 1-Clique</span>
               </>
             )}
           </button>

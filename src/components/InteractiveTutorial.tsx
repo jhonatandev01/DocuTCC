@@ -143,7 +143,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     iconColor: 'text-amber-400',
     tabKey: 'gerador_ia',
     description:
-      'Se você está começando do zero, informe o tema do seu TCC, curso, área de pesquisa e objetivos. O Gerador Autônomo cria a estrutura completa do trabalho com introdução, fundamentação e metodologia científica.',
+      'Se você está começando do zero, informe o tema do seu TCC, curso, área de pesquisa e objetivos. O assistente cria o esboço estrutural completo do trabalho com introdução, fundamentação e metodologia.',
     keyFeatures: [
       'Gera Capa, Resumo em Português e Abstract em Inglês',
       'Cria capítulos coerentes com citações no formato ABNT',
@@ -459,7 +459,7 @@ export const WelcomeBanner: React.FC<WelcomeBannerProps> = ({
               </span>
             </h4>
             <p className="text-[11px] text-slate-300">
-              Conheça em 1 minuto como formatar seu TCC segundo as normas ABNT, usar IA para escrever e exportar em Word (.docx).
+              Conheça em 1 minuto como formatar seu TCC segundo as normas ABNT, estruturar seu trabalho com IA e exportar em Word (.docx).
             </p>
           </div>
         </div>

@@ -10,7 +10,10 @@ import { AIAcademicAssistant } from './components/AIAcademicAssistant';
 import { AutonomousTCCGenerator } from './components/AutonomousTCCGenerator';
 import { ABNTAuditor } from './components/ABNTAuditor';
 import { ScriptsAutomationCenter } from './components/ScriptsAutomationCenter';
+import { AnimatePresence } from 'motion/react';
 import { InteractiveTutorial } from './components/InteractiveTutorial';
+import { TermsOfUseModal } from './components/TermsOfUseModal';
+import { SplashIntro } from './components/SplashIntro';
 import {
   BookOpen,
   FileText,
@@ -45,6 +48,20 @@ export default function App() {
 
   // Interactive Tutorial modal state (accessible via the Header Menu)
   const [showTutorial, setShowTutorial] = useState<boolean>(false);
+  const [showTerms, setShowTerms] = useState<boolean>(false);
+  const [showIntro, setShowIntro] = useState<boolean>(false);
+
+  useEffect(() => {
+    const hasAccepted = localStorage.getItem('docutcc_terms_accepted');
+    if (!hasAccepted) {
+      setShowTerms(true);
+    }
+  }, []);
+
+  const handleTermsAccept = () => {
+    setShowTerms(false);
+    setShowIntro(true);
+  };
 
   // Load from high-capacity IndexedDB on initial mount
   useEffect(() => {
@@ -223,6 +240,12 @@ export default function App() {
         onNavigateTab={(tab) => setActiveTab(tab)}
         currentTab={activeTab}
       />
+
+      {showTerms && <TermsOfUseModal onAccept={handleTermsAccept} />}
+
+      <AnimatePresence>
+        {showIntro && <SplashIntro onComplete={() => setShowIntro(false)} />}
+      </AnimatePresence>
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 pb-20 md:pb-8">

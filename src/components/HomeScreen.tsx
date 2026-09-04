@@ -71,8 +71,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       subtitle: 'Estruturação Inteligente',
       badge: 'Autônomo',
       badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
-      description: 'Informe seu tema para criar um trabalho completo fundamentado com citações.',
-      pagesPreview: 'Completo',
+      description: 'Informe seu tema para estruturar um esboço fundamentado e os capítulos iniciais.',
+      pagesPreview: 'Esboço',
       category: 'ia',
       type: 'ai',
       isAiFeatured: true,
@@ -236,14 +236,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 Gerador Autônomo IA
               </h3>
               <p className="text-xs text-slate-300/90 leading-relaxed mt-1.5">
-                Gere um trabalho acadêmico completo e fundamentado a partir do seu tema, estruturando capítulos e referências.
+                Estruture o esboço e os capítulos iniciais do seu trabalho acadêmico com o auxílio de Inteligência Artificial.
               </p>
             </div>
 
             <div className="mt-4 pt-3 border-t border-purple-500/20 flex items-center justify-between text-xs font-bold text-purple-300 group-hover:text-purple-200">
               <span className="flex items-center gap-1.5">
                 <Zap className="w-3.5 h-3.5 text-purple-400" />
-                Criar TCC com IA
+                Estruturar com IA
               </span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>

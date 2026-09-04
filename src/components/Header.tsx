@@ -458,7 +458,7 @@ export const Header: React.FC<HeaderProps> = ({
                         </span>
                       </div>
                       <p className="text-[11px] text-slate-400 font-normal mt-0.5">
-                        Geração autônoma completa de TCC com fundamentação e fontes web.
+                        Estruture os capítulos, tópicos e gere ideias iniciais com IA.
                       </p>
                     </div>
                   </button>
