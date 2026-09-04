@@ -1,0 +1,7 @@
+{
+  "name": "DocuTCC - Plataforma de TCC e Normas ABNT",
+  "description": "Plataforma avançada para elaboração de TCC e trabalhos acadêmicos com formatação automática nas normas ABNT, gerenciamento de citações, referências cruzadas e exportação em Word (.docx) e PDF.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
