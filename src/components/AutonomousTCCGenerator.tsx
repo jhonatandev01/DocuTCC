@@ -11,9 +11,11 @@ import {
   Layers,
   FileCheck2,
   Settings2,
-  RefreshCw
+  RefreshCw,
+  Globe,
+  ExternalLink
 } from 'lucide-react';
-import { TCCProject, AcademicDegree, DocumentType } from '../types';
+import { TCCProject, AcademicDegree, DocumentType, GroundingSource } from '../types';
 
 interface AutonomousTCCGeneratorProps {
   onProjectGenerated: (newProject: TCCProject) => void;
@@ -80,10 +82,11 @@ const PRESETS = [
 
 const GENERATION_STEPS = [
   'Inicializando motor neural de síntese acadêmica...',
+  'Pesquisando fontes atualizadas, dados e referências reais na web (Google Grounding)...',
   'Estruturando metadados institucionais e folha de rosto...',
   'Gerando Resumo em português (NBR 6028) e Abstract em inglês...',
   'Redigindo Introdução, Problema e Objetivos específicos...',
-  'Elaborando Fundamentação Teórica com citações ABNT (NBR 10520)...',
+  'Elaborando Fundamentação Teórica com dados da pesquisa e citações ABNT (NBR 10520)...',
   'Detalhando Metodologia e Desenvolvimento técnico...',
   'Catalogando referências bibliográficas rigorosas (NBR 6023:2018)...',
   'Diagramando estrutura com margens 3/3/2/2 cm e paginação...',
@@ -111,6 +114,7 @@ export const AutonomousTCCGenerator: React.FC<AutonomousTCCGeneratorProps> = ({
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successGenerated, setSuccessGenerated] = useState<boolean>(false);
+  const [generatedSources, setGeneratedSources] = useState<GroundingSource[]>([]);
 
   const handleApplyPreset = (presetId: string) => {
     setSelectedPreset(presetId);
@@ -172,6 +176,11 @@ export const AutonomousTCCGenerator: React.FC<AutonomousTCCGeneratorProps> = ({
       const data = await response.json();
       if (data.project) {
         setCurrentStepIndex(GENERATION_STEPS.length - 1);
+        if (data.project.groundingSources && Array.isArray(data.project.groundingSources)) {
+          setGeneratedSources(data.project.groundingSources);
+        } else {
+          setGeneratedSources([]);
+        }
         onProjectGenerated(data.project);
         setSuccessGenerated(true);
       } else {
@@ -463,23 +472,50 @@ export const AutonomousTCCGenerator: React.FC<AutonomousTCCGeneratorProps> = ({
 
         {/* Success Alert */}
         {successGenerated && (
-          <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 flex items-center justify-between text-sm">
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-              <div>
-                <p className="font-semibold">TCC Completo Gerado com Sucesso!</p>
-                <p className="text-xs text-emerald-200">
-                  Todas as seções, resumo, folha de rosto e referências NBR 6023 foram integradas ao seu projeto.
-                </p>
+          <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 space-y-3 text-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                <div>
+                  <p className="font-semibold">TCC Completo Gerado com Sucesso!</p>
+                  <p className="text-xs text-emerald-200">
+                    Todas as seções, fundamentação enriquecida com dados reais, resumo, folha de rosto e referências NBR 6023 foram integradas ao seu projeto.
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={onNavigateToPreview}
+                className="px-4 py-2 rounded-lg bg-emerald-500 text-slate-950 font-semibold text-xs flex items-center gap-2 hover:bg-emerald-400 transition-colors shadow-sm shrink-0"
+              >
+                Ver na Visualização A4
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
             </div>
-            <button
-              onClick={onNavigateToPreview}
-              className="px-4 py-2 rounded-lg bg-emerald-500 text-slate-950 font-semibold text-xs flex items-center gap-2 hover:bg-emerald-400 transition-colors shadow-sm"
-            >
-              Ver na Visualização A4
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+
+            {/* Grounding Sources Badge */}
+            {generatedSources.length > 0 && (
+              <div className="pt-2 border-t border-emerald-500/20">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-300 mb-2">
+                  <Globe className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Fontes de dados reais reunidas via Google Search Grounding ({generatedSources.length}):</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {generatedSources.map((source, idx) => (
+                    <a
+                      key={idx}
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-950/60 border border-emerald-500/30 hover:border-emerald-400 text-[11px] text-emerald-200 hover:text-white transition-colors"
+                      title={source.title}
+                    >
+                      <span className="truncate max-w-[200px]">{source.title || source.url}</span>
+                      <ExternalLink className="w-3 h-3 text-emerald-400 shrink-0" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

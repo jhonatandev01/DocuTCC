@@ -105,6 +105,12 @@ interface GeminiCallParams {
   systemInstruction?: string;
   temperature?: number;
   responseMimeType?: string;
+  tools?: any[];
+}
+
+interface GeminiCallResult {
+  text: string;
+  groundingSources?: Array<{ title: string; url: string }>;
 }
 
 // Allowed models in order of priority (from official gemini-api skill)
@@ -118,6 +124,14 @@ async function callGeminiWithRetryAndFallback(
   ai: GoogleGenAI,
   params: GeminiCallParams
 ): Promise<string> {
+  const result = await callGeminiWithDetailsAndFallback(ai, params);
+  return result.text;
+}
+
+async function callGeminiWithDetailsAndFallback(
+  ai: GoogleGenAI,
+  params: GeminiCallParams
+): Promise<GeminiCallResult> {
   let lastError: any = null;
 
   for (let modelIdx = 0; modelIdx < CANDIDATE_MODELS.length; modelIdx++) {
@@ -127,19 +141,43 @@ async function callGeminiWithRetryAndFallback(
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         console.log(`[Gemini] Solicitando ao modelo '${currentModel}' (opção ${modelIdx + 1}/${CANDIDATE_MODELS.length}, tentativa ${attempt}/${maxAttempts})...`);
+        const config: any = {
+          systemInstruction: params.systemInstruction,
+          temperature: params.temperature ?? 0.35,
+          ...(params.responseMimeType ? { responseMimeType: params.responseMimeType } : {}),
+        };
+
+        if (params.tools && params.tools.length > 0) {
+          config.tools = params.tools;
+        }
+
         const response = await ai.models.generateContent({
           model: currentModel,
           contents: params.contents,
-          config: {
-            systemInstruction: params.systemInstruction,
-            temperature: params.temperature ?? 0.35,
-            ...(params.responseMimeType ? { responseMimeType: params.responseMimeType } : {}),
-          },
+          config,
         });
 
         if (response.text) {
           console.log(`[Gemini] Resposta gerada com sucesso pelo modelo '${currentModel}'.`);
-          return response.text;
+
+          // Extract grounding URLs and sources if Google Search tool was used
+          const groundingSources: Array<{ title: string; url: string }> = [];
+          const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+          if (chunks && Array.isArray(chunks)) {
+            for (const chunk of chunks) {
+              if (chunk.web?.uri) {
+                groundingSources.push({
+                  title: chunk.web.title || chunk.web.uri,
+                  url: chunk.web.uri,
+                });
+              }
+            }
+          }
+
+          return {
+            text: response.text,
+            groundingSources: groundingSources.length > 0 ? groundingSources : undefined,
+          };
         } else {
           throw new Error("Resposta vazia retornada pela IA.");
         }
@@ -382,14 +420,15 @@ Você deve responder EXCLUSIVAMENTE em formato JSON com a seguinte estrutura:
 
 Certifique-se de produzir textos ricos e volumosos, sem abreviações ou simplificações.`;
 
-    const rawResponse = await callGeminiWithRetryAndFallback(ai, {
+    const rawCallResult = await callGeminiWithDetailsAndFallback(ai, {
       contents: userPrompt,
       systemInstruction,
       temperature: 0.35,
       responseMimeType: "application/json",
+      tools: [{ googleSearch: {} }],
     });
 
-    const parsed = cleanAndParseJSON(rawResponse || "{}");
+    const parsed = cleanAndParseJSON(rawCallResult.text || "{}");
 
     // Construct full TCCProject
     const fullProject = {
@@ -502,6 +541,7 @@ Certifique-se de produzir textos ricos e volumosos, sem abreviações ou simplif
         includeTableOfContents: true,
         showGridGuide: false,
       },
+      groundingSources: rawCallResult.groundingSources || [],
       lastModified: new Date().toISOString(),
     };
 
@@ -662,6 +702,7 @@ Retorne APENAS o JSON válido.`;
       systemInstruction,
       temperature: 0.2,
       responseMimeType: "application/json",
+      tools: [{ googleSearch: {} }],
     });
 
     const parsed = cleanAndParseJSON(rawResponse || "{}");

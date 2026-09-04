@@ -798,6 +798,22 @@ export const ABNTDocumentPreview: React.FC<ABNTDocumentPreviewProps> = ({
                     {ref.formattedABNT}
                   </p>
                 ))}
+
+                {project.groundingSources && project.groundingSources.length > 0 && (
+                  <div className="pt-6 border-t border-slate-300 text-[10pt] text-slate-700 leading-snug">
+                    <p className="font-bold text-black mb-2">
+                      FONTES DIGITAIS E DOCUMENTAÇÃO CONSULTADA (Pesquisa e Validação Online):
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {project.groundingSources.map((source, idx) => (
+                        <li key={idx}>
+                          <span className="font-semibold text-black">{source.title || 'Recurso Online'}:</span>{' '}
+                          <span className="break-all font-mono text-[9pt]">{source.url}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -133,6 +133,11 @@ export interface TCCProjectSettings {
   showGridGuide: boolean;
 }
 
+export interface GroundingSource {
+  title: string;
+  url: string;
+}
+
 export interface TCCProject {
   id: string;
   title: string;
@@ -173,6 +178,7 @@ export interface TCCProject {
   references: ABNTReference[];
   appendices: AppendixItem[];
   annexes: AnnexItem[];
+  groundingSources?: GroundingSource[];
   settings: TCCProjectSettings;
   lastModified: string;
 }
