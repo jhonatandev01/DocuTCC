@@ -13,6 +13,10 @@ import {
   Sliders,
   FileText,
   Languages,
+  BookOpen,
+  ShieldCheck,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { Author, BoardMember, TCCProject } from '../types';
 
@@ -28,6 +32,7 @@ export const ProjectMetadataEditor: React.FC<ProjectMetadataEditorProps> = ({
   const [activeSubTab, setActiveSubTab] = useState<
     'geral' | 'instituicao' | 'autoria' | 'resumo' | 'pre_textuais' | 'configuracoes'
   >('geral');
+  const [showNormsDetail, setShowNormsDetail] = useState(false);
 
   // Helper to generate default nature of work
   const generateDefaultNatureOfWork = () => {
@@ -121,7 +126,59 @@ export const ProjectMetadataEditor: React.FC<ProjectMetadataEditorProps> = ({
     : 0;
 
   return (
-    <div className="bg-slate-900/90 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
+    <div className="glass-panel-heavy rounded-2xl overflow-hidden">
+      {/* Integrated ABNT NBR 14724 & Formatting Guide inside the Editor context */}
+      <div className="bg-slate-900/50 backdrop-blur-sm border-b border-slate-700/80 px-5 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-100">
+                  Normas Técnicas Oficiais ABNT NBR 14724 & 6023
+                </span>
+                <span className="text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.2 rounded-full">
+                  Ativo no Editor
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                Os dados desta página compõem automaticamente a Capa, Folha de Rosto e Folha de Aprovação.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowNormsDetail(!showNormsDetail)}
+            className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg transition-colors cursor-pointer"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>{showNormsDetail ? 'Ocultar Detalhes ABNT' : 'Ver Regras ABNT da Capa'}</span>
+            {showNormsDetail ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </button>
+        </div>
+
+        {/* Collapsible ABNT Specifications */}
+        {showNormsDetail && (
+          <div className="mt-3 pt-3 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-[11px] text-slate-300 animate-in fade-in duration-200">
+            <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+              <span className="font-semibold text-amber-300 block mb-0.5">Margens A4 (NBR 14724):</span>
+              Superior: 3cm | Esquerda: 3cm | Direita: 2cm | Inferior: 2cm.
+            </div>
+            <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+              <span className="font-semibold text-sky-300 block mb-0.5">Tipografia & Espaçamento:</span>
+              Times New Roman ou Arial 12pt, entrelinhas 1,5, recuo de parágrafo 1,25cm.
+            </div>
+            <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800">
+              <span className="font-semibold text-emerald-300 block mb-0.5">Citações e Notas:</span>
+              Citações diretas longas (&gt; 3 linhas) com recuo de 4cm e corpo 10pt (NBR 10520).
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Sub Tabs */}
       <div className="flex border-b border-slate-800 bg-slate-950/60 overflow-x-auto">
         <button

@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   BookOpen,
   FileText,
@@ -22,6 +23,10 @@ import {
   Menu,
   X,
   Smartphone,
+  ArrowLeft,
+  Home,
+  Plus,
+  FileEdit,
 } from 'lucide-react';
 import { TCCProject, ViewTab } from '../types';
 import { getProjectStatistics } from '../utils/abntFormatter';
@@ -43,6 +48,7 @@ interface HeaderProps {
   onOpenAIAssistant?: () => void;
   onOpenTutorial?: () => void;
   onLoadTemplate: (templateId: string) => void;
+  onNewBlankProject?: () => void;
   isGeneratingPDF?: boolean;
 }
 
@@ -61,14 +67,30 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAIAssistant,
   onOpenTutorial,
   onLoadTemplate,
+  onNewBlankProject,
   isGeneratingPDF = false,
 }) => {
   const stats = getProjectStatistics(project);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const toolsMenuRef = React.useRef<HTMLDivElement>(null);
+  const [showToolsMenu, setShowToolsMenu] = React.useState<boolean>(false);
   const [showABNTGuide, setShowABNTGuide] = React.useState<boolean>(false);
-  const [showBackupMenu, setShowBackupMenu] = React.useState<boolean>(false);
-  const [showMobileMenu, setShowMobileMenu] = React.useState<boolean>(false);
   const [isExportingDocx, setIsExportingDocx] = React.useState<boolean>(false);
+
+  // Close tools dropdown when clicking outside
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (toolsMenuRef.current && !toolsMenuRef.current.contains(event.target as Node)) {
+        setShowToolsMenu(false);
+      }
+    }
+    if (showToolsMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showToolsMenu]);
 
   const handleDownloadDocx = async () => {
     try {
@@ -128,90 +150,104 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="no-print bg-slate-900 border-b border-slate-800 sticky top-0 z-40 shadow-xl">
+    <header className="no-print glass-panel-heavy sticky top-0 z-40 border-b border-slate-700/80 shadow-2xl">
       {/* Top Banner */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
         {/* Brand & Project Name */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-950 border border-amber-500/40 p-0.5 shadow-md shadow-amber-900/30 overflow-hidden shrink-0">
-            <img src="/icon.svg" alt="DocuTCC Logo" className="w-full h-full object-cover rounded-lg" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold text-slate-100 tracking-tight flex items-center gap-1.5">
-                DocuTCC
-                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-medium border border-amber-500/30">
-                  ABNT NBR 14724
-                </span>
-              </h1>
+          <button
+            type="button"
+            onClick={() => handleTabClick('inicio')}
+            className="flex items-center gap-3 text-left group cursor-pointer"
+            title="Ir para a Tela Inicial (Hub de Documentos)"
+          >
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-950 border border-amber-500/40 p-0.5 shadow-md shadow-amber-900/30 overflow-hidden shrink-0 group-hover:border-amber-400 group-hover:scale-105 transition-all">
+              <img src="/icon.svg" alt="DocuTCC Logo" className="w-full h-full object-cover rounded-lg" />
             </div>
-            <p className="text-xs text-slate-400 truncate max-w-[180px] sm:max-w-xs md:max-w-md">
-              {project.title || 'Novo Trabalho de Conclusão de Curso'}
-            </p>
-          </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-base font-bold text-slate-100 group-hover:text-amber-300 transition-colors tracking-tight flex items-center gap-2">
+                  DocuTCC
+                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-medium border border-slate-700/80">
+                    Formatador Acadêmico
+                  </span>
+                </h1>
+              </div>
+              <p className="text-xs text-slate-400 truncate max-w-[180px] sm:max-w-xs md:max-w-md">
+                {project.title || 'Novo Trabalho de Conclusão de Curso'}
+              </p>
+            </div>
+          </button>
         </div>
 
-        {/* Quick Stats (Desktop) */}
-        <div className="hidden md:flex items-center gap-4 text-xs text-slate-300 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/60">
-          <div className="flex items-center gap-1.5">
-            <FileText className="w-3.5 h-3.5 text-amber-400" />
-            <span>~{stats.estimatedPages} págs.</span>
-          </div>
-          <span className="text-slate-600">|</span>
-          <div>
-            <span>{stats.wordCount.toLocaleString('pt-BR')} palavras</span>
-          </div>
-          <span className="text-slate-600">|</span>
-          <div className="flex items-center gap-1">
-            <Bookmark className="w-3.5 h-3.5 text-blue-400" />
-            <span>{stats.totalReferences} refs</span>
-          </div>
-          <span className="text-slate-600">|</span>
-          <div className="flex items-center gap-1">
-            <Layers className="w-3.5 h-3.5 text-emerald-400" />
-            <span>{stats.totalFigures + stats.totalTables} ilustrações</span>
-          </div>
+        {/* Master Screen Tabs: Início vs Editor vs + Novo */}
+        <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 shadow-inner">
+          <button
+            type="button"
+            onClick={() => handleTabClick('inicio')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              activeTab === 'inicio'
+                ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                : 'text-slate-300 hover:text-white hover:bg-slate-850'
+            }`}
+            title="Tela Inicial: Boas-vindas, modelos prontos e seus documentos"
+          >
+            <Home className="w-3.5 h-3.5" />
+            <span>Início</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleTabClick('secoes')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              activeTab !== 'inicio'
+                ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                : 'text-slate-300 hover:text-white hover:bg-slate-850'
+            }`}
+            title="Editor: Edição estruturada do documento, capítulos e ABNT"
+          >
+            <FileEdit className="w-3.5 h-3.5" />
+            <span>Editor</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (onNewBlankProject) {
+                onNewBlankProject();
+              } else {
+                handleTabClick('secoes');
+              }
+            }}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 transition-colors border border-amber-500/30 cursor-pointer"
+            title="Iniciar um novo documento (+)"
+          >
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+            <span className="hidden sm:inline">Novo</span>
+          </button>
         </div>
+
+        {/* Clean Status Summary in Header (Only when inside Editor) */}
+        {activeTab !== 'inicio' && (
+          <div className="hidden lg:flex items-center gap-3 text-xs text-slate-300 bg-slate-800/60 px-3 py-1.5 rounded-lg border border-slate-700/50">
+            <div className="flex items-center gap-1.5" title="Estimativa de páginas ABNT">
+              <FileText className="w-3.5 h-3.5 text-amber-400" />
+              <span>~{stats.estimatedPages} págs</span>
+            </div>
+            <span className="text-slate-600">•</span>
+            <div title="Palavras no texto">
+              <span>{stats.wordCount.toLocaleString('pt-BR')} palavras</span>
+            </div>
+            <span className="text-slate-600">•</span>
+            <div className="flex items-center gap-1 text-emerald-400">
+              <CheckCircle2 className="w-3 h-3" />
+              <span>Formatado</span>
+            </div>
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
-          {/* Tutorial Interativo Button */}
-          <button
-            type="button"
-            onClick={onOpenTutorial}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 hover:border-amber-500/60 transition-all shadow-sm cursor-pointer"
-            title="Tutorial Interativo: Aprenda a usar todas as funções do DocuTCC"
-          >
-            <Compass className="w-4 h-4 text-amber-400" />
-            <span className="hidden sm:inline">Tutorial</span>
-          </button>
-
-          {/* Web App Installation (PWA) Button */}
-          <PWAInstallButton variant="compact" />
-
-          {/* Load Model Dropdown (Desktop/Tablet) */}
-          <div className="hidden sm:block">
-            <select
-              onChange={(e) => {
-                if (e.target.value) {
-                  onLoadTemplate(e.target.value);
-                  e.target.value = '';
-                }
-              }}
-              defaultValue=""
-              className="text-xs bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 transition-colors cursor-pointer"
-              title="Carregar Modelo Acadêmico Pronto"
-            >
-              <option value="" disabled>
-                📋 Modelos ABNT...
-              </option>
-              <option value="tcc-ia-diagnostico">Monografia Completa (Bacharelado)</option>
-              <option value="tcc-tecnico-automacao">TCC Técnico (Projeto Prático / Nível Médio)</option>
-              <option value="tcc-artigo-gestao">Artigo Científico ABNT (NBR 6022)</option>
-              <option value="novo-em-branco">Projeto em Branco (Novo)</option>
-            </select>
-          </div>
-
           {/* Real Save to Browser Storage */}
           <button
             type="button"
@@ -273,341 +309,426 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="hidden lg:inline">Imprimir / PDF</span>
           </button>
 
-          {/* Mobile Menu Toggle Button */}
-          <button
-            type="button"
-            onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="md:hidden flex items-center justify-center p-2 rounded-lg bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white border border-slate-700 transition-colors cursor-pointer"
-            title="Menu Completo"
-          >
-            {showMobileMenu ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-          </button>
+          {/* Hidden File Input for Backup Restoration */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={onImportJSON}
+            className="hidden"
+          />
 
-          {/* Technical Backup & Restore Menu (.json) */}
-          <div className="relative">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json"
-              onChange={onImportJSON}
-              className="hidden"
-            />
+          {/* Main Utility & Settings Menu Dropdown (Requested: encapsulates Tutorial, PWA, Models, Backup & AI tools) */}
+          <div className="relative" ref={toolsMenuRef}>
             <button
               type="button"
-              onClick={() => setShowBackupMenu(!showBackupMenu)}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors cursor-pointer"
-              title="Cópia de segurança e restauração técnica (.json)"
+              onClick={() => setShowToolsMenu(!showToolsMenu)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all duration-200 shadow-sm cursor-pointer transform active:scale-95 ${
+                showToolsMenu
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/60 shadow-lg shadow-amber-950/40 ring-2 ring-amber-500/30'
+                  : 'bg-slate-850 hover:bg-slate-800 text-slate-200 border-slate-750 hover:border-slate-650 hover:scale-[1.02]'
+              }`}
+              title="Menu: Recursos de IA, Modelos, Backup e Ajuda"
             >
-              <Database className="w-3.5 h-3.5 text-slate-400" />
-              <span className="hidden lg:inline">Backup</span>
-              <ChevronDown className="w-3 h-3 text-slate-400" />
+              <Menu className="w-4 h-4 text-amber-400" />
+              <span className="hidden xs:inline">Menu</span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-300 ${
+                  showToolsMenu ? 'rotate-180 text-amber-400' : ''
+                }`}
+              />
             </button>
 
-            {showBackupMenu && (
-              <div className="absolute right-0 mt-2 w-72 bg-slate-900 border border-slate-700/80 rounded-xl shadow-2xl p-2.5 z-50 animate-in fade-in slide-in-from-top-2">
-                <div className="px-2 py-1 border-b border-slate-800 text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                  <span>Cópia de Segurança (.json)</span>
-                  <span className="text-amber-400 text-[9px] font-mono">DocuTCC</span>
+            {/* Dropdown Menu Container */}
+            <AnimatePresence>
+              {showToolsMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                  className="fixed inset-x-3 top-16 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-[390px] max-h-[84vh] overflow-y-auto glass-panel-heavy rounded-2xl p-3.5 z-50 origin-top-right"
+                >
+                  {/* Menu Header */}
+                <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-800">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
+                      <Menu className="w-4 h-4 text-amber-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-100">Menu & Recursos</h4>
+                      <p className="text-[10px] text-slate-400">Modelos, Inteligência Artificial e Ajuda</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowToolsMenu(false)}
+                    className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-                <p className="px-2 py-1.5 text-[11px] text-slate-400 leading-relaxed">
-                  Arquivos <code className="text-amber-400">.json</code> contêm dados técnicos para transferir seu trabalho para outro computador ou restaurá-lo no DocuTCC.
-                </p>
-                <div className="space-y-1 pt-1">
+
+                {/* Section 1: Help & App Installation (Requested by user) */}
+                <div className="space-y-1 mb-3">
+                  <div className="text-[10px] font-bold text-amber-400/90 uppercase tracking-wider px-2 py-1">
+                    Ajuda & Aplicativo
+                  </div>
+
+                  {/* Tutorial Interativo */}
                   <button
                     type="button"
                     onClick={() => {
-                      setShowBackupMenu(false);
-                      onExportJSON();
+                      setShowToolsMenu(false);
+                      if (onOpenTutorial) onOpenTutorial();
                     }}
-                    className="w-full text-left flex items-start gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-slate-200 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
+                    className="w-full text-left flex items-start gap-2.5 px-2.5 py-2 rounded-xl text-xs font-medium text-slate-200 hover:bg-slate-800/90 hover:text-white transition-colors cursor-pointer border border-transparent hover:border-slate-700/60"
                   >
-                    <Download className="w-4 h-4 text-sky-400 mt-0.5 shrink-0" />
-                    <div>
-                      <div className="font-semibold text-slate-100">Exportar Backup (.json)</div>
-                      <div className="text-[10px] text-slate-400 font-normal">Baixar cópia de segurança dos dados</div>
+                    <div className="p-1.5 rounded-lg bg-amber-500/15 text-amber-400 shrink-0 mt-0.5">
+                      <Compass className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-100">Tutorial Interativo</span>
+                        <span className="text-[10px] text-amber-300 font-medium bg-amber-500/15 px-1.5 py-0.5 rounded">
+                          Passo a passo
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 font-normal mt-0.5">
+                        Aprenda a preencher capa, capítulos e gerar referências ABNT.
+                      </p>
                     </div>
                   </button>
 
+                  {/* Instalar Web App */}
+                  <div className="px-1 py-0.5">
+                    <PWAInstallButton
+                      variant="menu-item"
+                      onAfterClick={() => setShowToolsMenu(false)}
+                    />
+                  </div>
+
+                  {/* Guia Normas ABNT */}
                   <button
                     type="button"
                     onClick={() => {
-                      setShowBackupMenu(false);
-                      fileInputRef.current?.click();
+                      setShowToolsMenu(false);
+                      handleGuidelinesClick();
                     }}
-                    className="w-full text-left flex items-start gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium text-slate-200 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
+                    className="w-full text-left flex items-start gap-2.5 px-2.5 py-2 rounded-xl text-xs font-medium text-slate-200 hover:bg-slate-800/90 hover:text-white transition-colors cursor-pointer border border-transparent hover:border-slate-700/60"
                   >
-                    <Upload className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
-                    <div>
-                      <div className="font-semibold text-slate-100">Restaurar Backup (.json)</div>
-                      <div className="text-[10px] text-slate-400 font-normal">Carregar arquivo de backup salvo antes</div>
+                    <div className="p-1.5 rounded-lg bg-slate-800 text-amber-400 shrink-0 mt-0.5">
+                      <HelpCircle className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-100">Guia de Normas ABNT</span>
+                        <span className="text-[10px] text-slate-400 font-mono">NBRs</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 font-normal mt-0.5">
+                        Consulte as regras NBR 14724, 6023, 10520 e 6028.
+                      </p>
                     </div>
                   </button>
                 </div>
-                <div className="mt-2 pt-2 border-t border-slate-800/80 px-2 text-[10px] text-slate-500">
-                  💡 Para editar ou entregar o trabalho com formatação ABNT, use <strong className="text-blue-300">Exportar Word</strong> ou <strong className="text-amber-300">Imprimir / PDF</strong>.
+
+                {/* Section 2: AI & Academic Tools */}
+                <div className="space-y-1 mb-3 pt-2 border-t border-slate-800">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">
+                    Recursos de IA & Auditoria
+                  </div>
+
+                  {/* Gerador Autônomo IA */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowToolsMenu(false);
+                      handleTabClick('gerador_ia');
+                    }}
+                    className="w-full text-left flex items-start gap-2.5 px-2.5 py-2 rounded-xl text-xs font-medium text-slate-200 hover:bg-slate-800/90 hover:text-white transition-colors cursor-pointer border border-transparent hover:border-slate-700/60"
+                  >
+                    <div className="p-1.5 rounded-lg bg-amber-500/15 text-amber-400 shrink-0 mt-0.5">
+                      <Wand2 className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-100">Gerador Autônomo IA</span>
+                        <span className="text-[10px] text-amber-300 font-medium bg-amber-500/20 px-1.5 py-0.5 rounded">
+                          Autônomo
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 font-normal mt-0.5">
+                        Geração autônoma completa de TCC com fundamentação e fontes web.
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Chat com IA Especialista */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowToolsMenu(false);
+                      handleAIAssistantClick();
+                    }}
+                    className="w-full text-left flex items-start gap-2.5 px-2.5 py-2 rounded-xl text-xs font-medium text-slate-200 hover:bg-slate-800/90 hover:text-white transition-colors cursor-pointer border border-transparent hover:border-slate-700/60"
+                  >
+                    <div className="p-1.5 rounded-lg bg-sky-500/15 text-sky-400 shrink-0 mt-0.5">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-100">Chat com IA Especialista</span>
+                        <span className="text-[10px] text-sky-300 font-medium bg-sky-500/20 px-1.5 py-0.5 rounded">
+                          Chat
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 font-normal mt-0.5">
+                        Tire dúvidas sobre escrita científica, ABNT e aprimore parágrafos.
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Auditoria ABNT */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowToolsMenu(false);
+                      handleTabClick('auditoria');
+                    }}
+                    className="w-full text-left flex items-start gap-2.5 px-2.5 py-2 rounded-xl text-xs font-medium text-slate-200 hover:bg-slate-800/90 hover:text-white transition-colors cursor-pointer border border-transparent hover:border-slate-700/60"
+                  >
+                    <div className="p-1.5 rounded-lg bg-indigo-500/15 text-indigo-400 shrink-0 mt-0.5">
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-100">Auditoria ABNT</span>
+                        <span className="text-[10px] text-indigo-300 font-medium bg-indigo-500/20 px-1.5 py-0.5 rounded">
+                          Diagnóstico
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 font-normal mt-0.5">
+                        Varredura de conformidade, citações órfãs e formatação técnica.
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Scripts & CLI */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowToolsMenu(false);
+                      handleTabClick('scripts');
+                    }}
+                    className="w-full text-left flex items-start gap-2.5 px-2.5 py-2 rounded-xl text-xs font-medium text-slate-200 hover:bg-slate-800/90 hover:text-white transition-colors cursor-pointer border border-transparent hover:border-slate-700/60"
+                  >
+                    <div className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-400 shrink-0 mt-0.5">
+                      <Terminal className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-100">Scripts & Automação CLI</span>
+                        <span className="text-[10px] text-emerald-300 font-medium bg-emerald-500/20 px-1.5 py-0.5 rounded">
+                          Dev / LaTeX
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 font-normal mt-0.5">
+                        Scripts de exportação, compilação de código e templates técnicos.
+                      </p>
+                    </div>
+                  </button>
                 </div>
-              </div>
-            )}
+
+                {/* Section 3: Academic Templates */}
+                <div className="mb-3 pt-2 border-t border-slate-800">
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mb-1.5">
+                    Modelos Acadêmicos Prontos
+                  </label>
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        onLoadTemplate(e.target.value);
+                        setShowToolsMenu(false);
+                        e.target.value = '';
+                      }
+                    }}
+                    defaultValue=""
+                    className="w-full text-xs bg-slate-950 text-slate-200 border border-slate-700/80 rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500 transition-colors cursor-pointer"
+                  >
+                    <option value="" disabled>
+                      📋 Carregar Modelo de Exemplo...
+                    </option>
+                    <option value="tcc-ia-diagnostico">Monografia Completa (Bacharelado)</option>
+                    <option value="tcc-tecnico-automacao">TCC Técnico (Projeto Prático)</option>
+                    <option value="tcc-artigo-gestao">Artigo Científico ABNT (NBR 6022)</option>
+                    <option value="novo-em-branco">Projeto em Branco (Novo)</option>
+                  </select>
+                </div>
+
+                {/* Section 4: Backup & Restore (.json) */}
+                <div className="pt-2 border-t border-slate-800">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">
+                    Cópia de Segurança (.json)
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5 mt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowToolsMenu(false);
+                        onExportJSON();
+                      }}
+                      className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-800 text-sky-300 border border-slate-700 transition-colors cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5 text-sky-400" />
+                      <span>Exportar Backup</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowToolsMenu(false);
+                        fileInputRef.current?.click();
+                      }}
+                      className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-800 text-emerald-300 border border-slate-700 transition-colors cursor-pointer"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Restaurar</span>
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-
-          <button
-            type="button"
-            onClick={handleGuidelinesClick}
-            className="p-1.5 text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 transition-colors"
-            title="Guia das Normas ABNT"
-          >
-            <HelpCircle className="w-4 h-4 text-amber-400" />
-          </button>
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown / Drawer (Mobile only) */}
-      {showMobileMenu && (
-        <div className="md:hidden border-t border-slate-800 bg-slate-900/98 backdrop-blur-xl px-4 py-3 space-y-3 animate-in slide-in-from-top-3 duration-200 shadow-2xl">
-          {/* Quick Stats on Mobile */}
-          <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs">
-            <div className="flex items-center gap-1.5 text-slate-300">
-              <FileText className="w-3.5 h-3.5 text-amber-400" />
-              <span>~{stats.estimatedPages} págs. ({stats.wordCount.toLocaleString('pt-BR')} palavras)</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-slate-300">
-              <Bookmark className="w-3.5 h-3.5 text-blue-400" />
-              <span>{stats.totalReferences} refs | {stats.totalFigures + stats.totalTables} figuras</span>
-            </div>
-          </div>
+      {/* Navigation Sub-Tabs (Displayed strictly in Editor mode, keeping Home screen 100% clean) */}
+      {activeTab !== 'inicio' && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-1 overflow-x-auto border-t border-slate-800/80 scrollbar-none">
+          {/* Direct Back to Home button */}
+          <button
+            type="button"
+            onClick={() => handleTabClick('inicio')}
+            className="flex items-center gap-1.5 py-2 px-3 text-xs font-semibold text-slate-300 hover:text-amber-300 hover:bg-slate-800 rounded-lg transition-colors mr-1 cursor-pointer shrink-0"
+            title="Voltar para a Tela Inicial (Hub de Documentos)"
+          >
+            <Home className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Início</span>
+          </button>
 
-          {/* Modelos ABNT Select (Mobile) */}
-          <div>
-            <label className="block text-[11px] font-semibold text-slate-400 mb-1">
-              Carregar Modelo Acadêmico:
-            </label>
-            <select
-              onChange={(e) => {
-                if (e.target.value) {
-                  onLoadTemplate(e.target.value);
-                  setShowMobileMenu(false);
-                  e.target.value = '';
-                }
-              }}
-              defaultValue=""
-              className="w-full text-xs bg-slate-800 text-slate-200 border border-slate-700 rounded-xl p-2.5 focus:border-amber-500"
-            >
-              <option value="" disabled>📋 Selecionar Modelo ABNT...</option>
-              <option value="tcc-ia-diagnostico">Monografia Completa (Bacharelado)</option>
-              <option value="tcc-tecnico-automacao">TCC Técnico (Projeto Prático)</option>
-              <option value="tcc-artigo-gestao">Artigo Científico ABNT (NBR 6022)</option>
-              <option value="novo-em-branco">Projeto em Branco (Novo)</option>
-            </select>
-          </div>
+          <button
+            type="button"
+            onClick={() => handleTabClick('metadata')}
+            className={`flex items-center gap-2 py-2.5 px-4 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
+              isTabActive('metadata')
+                ? 'border-amber-500 text-amber-400 bg-amber-500/5'
+                : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
+            }`}
+          >
+            <BookOpen className="w-4 h-4" />
+            <span>Capa & Dados ABNT</span>
+          </button>
 
-          {/* Tabs Direct List for Mobile */}
-          <div className="space-y-1 pt-1">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block px-1">
-              Navegar nas Seções:
+          <button
+            type="button"
+            onClick={() => handleTabClick('secoes')}
+            className={`flex items-center gap-2 py-2.5 px-4 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
+              isTabActive('secoes')
+                ? 'border-amber-500 text-amber-400 bg-amber-500/5'
+                : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            <span>Capítulos & Conteúdo</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleTabClick('citacoes')}
+            className={`flex items-center gap-2 py-2.5 px-4 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
+              isTabActive('citacoes')
+                ? 'border-amber-500 text-amber-400 bg-amber-500/5'
+                : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
+            }`}
+          >
+            <Bookmark className="w-4 h-4" />
+            <span>Citações & NBR 6023</span>
+            <span className="ml-1 text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300 font-mono">
+              {project.references.length}
             </span>
-            {[
-              { key: 'metadata' as ViewTab, label: 'Capa & Dados ABNT', icon: BookOpen, color: 'text-amber-400' },
-              { key: 'secoes' as ViewTab, label: 'Capítulos & Conteúdo', icon: FileText, color: 'text-sky-400' },
-              { key: 'citacoes' as ViewTab, label: `Citações & NBR 6023 (${project.references.length})`, icon: Bookmark, color: 'text-blue-400' },
-              { key: 'referencias_cruzadas' as ViewTab, label: `Figuras & Tabelas (${project.crossReferences.length})`, icon: Layers, color: 'text-emerald-400' },
-              { key: 'preview' as ViewTab, label: 'Visualização ABNT (A4)', icon: Eye, color: 'text-amber-400' },
-              { key: 'gerador_ia' as ViewTab, label: 'Gerador Autônomo IA', icon: Wand2, color: 'text-amber-300' },
-              { key: 'auditoria' as ViewTab, label: 'Auditoria ABNT', icon: ShieldCheck, color: 'text-indigo-400' },
-              { key: 'scripts' as ViewTab, label: 'Scripts & CLI', icon: Terminal, color: 'text-emerald-400' },
-              { key: 'assistente_ia' as ViewTab, label: 'Chat com IA Especialista', icon: Sparkles, color: 'text-amber-400' },
-            ].map((item) => {
-              const IconComp = item.icon;
-              const active = isTabActive(item.key);
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => {
-                    handleTabClick(item.key);
-                    setShowMobileMenu(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all min-h-[44px] cursor-pointer ${
-                    active
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                  }`}
-                >
-                  <IconComp className={`w-4 h-4 ${item.color}`} />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          </button>
 
-          {/* Quick Actions Footer inside Drawer */}
-          <div className="pt-2 border-t border-slate-800 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setShowMobileMenu(false);
-                if (onOpenTutorial) onOpenTutorial();
-              }}
-              className="flex-1 min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-amber-500/15 text-amber-300 border border-amber-500/30 text-xs font-bold"
-            >
-              <Compass className="w-4 h-4 text-amber-400" />
-              <span>Tutorial</span>
-            </button>
+          <button
+            type="button"
+            onClick={() => handleTabClick('referencias_cruzadas')}
+            className={`flex items-center gap-2 py-2.5 px-4 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
+              isTabActive('referencias_cruzadas')
+                ? 'border-amber-500 text-amber-400 bg-amber-500/5'
+                : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            <span>Figuras & Tabelas</span>
+            <span className="ml-1 text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300 font-mono">
+              {project.crossReferences.length}
+            </span>
+          </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setShowMobileMenu(false);
-                handleGuidelinesClick();
-              }}
-              className="flex-1 min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-slate-800 text-slate-200 border border-slate-700 text-xs font-semibold"
-            >
-              <HelpCircle className="w-4 h-4 text-amber-400" />
-              <span>Guia ABNT</span>
-            </button>
+          <button
+            type="button"
+            onClick={() => handleTabClick('preview')}
+            className={`flex items-center gap-2 py-2.5 px-4 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
+              isTabActive('preview')
+                ? 'border-amber-500 text-amber-400 bg-amber-500/5'
+                : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
+            }`}
+          >
+            <Eye className="w-4 h-4" />
+            <span>Visualização ABNT (A4)</span>
+          </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setShowMobileMenu(false);
-                handleDownloadPDFClick();
-              }}
-              className="flex-1 min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-slate-800 text-amber-300 border border-slate-700 text-xs font-semibold"
-            >
-              <Download className="w-4 h-4 text-amber-400" />
-              <span>Baixar PDF</span>
-            </button>
-          </div>
+          {/* Indicator and Return button when an extra tool from the menu is active */}
+          {(isTabActive('gerador_ia') ||
+            isTabActive('auditoria') ||
+            isTabActive('scripts') ||
+            isTabActive('assistente_ia')) && (
+            <div className="ml-2 flex items-center gap-2 py-1 pl-2 border-l border-slate-800">
+              <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                {isTabActive('gerador_ia') && <Wand2 className="w-3.5 h-3.5 text-amber-400" />}
+                {isTabActive('auditoria') && <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />}
+                {isTabActive('scripts') && <Terminal className="w-3.5 h-3.5 text-emerald-400" />}
+                {isTabActive('assistente_ia') && <Sparkles className="w-3.5 h-3.5 text-amber-400" />}
+                <span>
+                  {isTabActive('gerador_ia') && 'Gerador IA'}
+                  {isTabActive('auditoria') && 'Auditoria ABNT'}
+                  {isTabActive('scripts') && 'Scripts CLI'}
+                  {isTabActive('assistente_ia') && 'Chat com IA'}
+                </span>
+              </span>
+              <button
+                type="button"
+                onClick={() => handleTabClick('secoes')}
+                className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white border border-slate-700 transition-colors cursor-pointer"
+                title="Voltar para a edição direta do documento"
+              >
+                <ArrowLeft className="w-3 h-3 text-amber-400" />
+                <span>Voltar ao Documento</span>
+              </button>
+            </div>
+          )}
+
+          {/* Quick shortcut to open tools menu from the tab bar */}
+          <button
+            type="button"
+            onClick={() => setShowToolsMenu(!showToolsMenu)}
+            className="ml-auto flex items-center gap-1.5 py-1.5 px-3 text-xs font-medium text-slate-400 hover:text-amber-300 hover:bg-slate-800/60 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
+            title="Abrir Menu de Ferramentas, IA e Utilitários"
+          >
+            <Menu className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Mais Ferramentas ▾</span>
+          </button>
         </div>
       )}
-
-      {/* Navigation Tabs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-1 overflow-x-auto border-t border-slate-800/80 scrollbar-none">
-        <button
-          type="button"
-          onClick={() => handleTabClick('metadata')}
-          className={`flex items-center gap-2 py-2.5 px-4 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
-            isTabActive('metadata')
-              ? 'border-amber-500 text-amber-400 bg-amber-500/5'
-              : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
-          }`}
-        >
-          <BookOpen className="w-4 h-4" />
-          <span>Capa & Dados ABNT</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleTabClick('secoes')}
-          className={`flex items-center gap-2 py-2.5 px-4 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
-            isTabActive('secoes')
-              ? 'border-amber-500 text-amber-400 bg-amber-500/5'
-              : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
-          }`}
-        >
-          <FileText className="w-4 h-4" />
-          <span>Capítulos & Conteúdo</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleTabClick('citacoes')}
-          className={`flex items-center gap-2 py-2.5 px-4 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
-            isTabActive('citacoes')
-              ? 'border-amber-500 text-amber-400 bg-amber-500/5'
-              : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
-          }`}
-        >
-          <Bookmark className="w-4 h-4" />
-          <span>Citações & NBR 6023</span>
-          <span className="ml-1 text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300 font-mono">
-            {project.references.length}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleTabClick('referencias_cruzadas')}
-          className={`flex items-center gap-2 py-2.5 px-4 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
-            isTabActive('referencias_cruzadas')
-              ? 'border-amber-500 text-amber-400 bg-amber-500/5'
-              : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
-          }`}
-        >
-          <Layers className="w-4 h-4" />
-          <span>Figuras & Tabelas</span>
-          <span className="ml-1 text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300 font-mono">
-            {project.crossReferences.length}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleTabClick('preview')}
-          className={`flex items-center gap-2 py-2.5 px-4 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
-            isTabActive('preview')
-              ? 'border-amber-500 text-amber-400 bg-amber-500/5'
-              : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
-          }`}
-        >
-          <Eye className="w-4 h-4" />
-          <span>Visualização ABNT (A4)</span>
-        </button>
-
-        {/* Gerador Autônomo IA */}
-        <button
-          type="button"
-          onClick={() => handleTabClick('gerador_ia')}
-          className={`flex items-center gap-2 py-2.5 px-3.5 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
-            isTabActive('gerador_ia')
-              ? 'border-amber-500 text-amber-300 bg-amber-500/10'
-              : 'border-transparent text-amber-400/90 hover:text-amber-200 hover:border-amber-500/30'
-          }`}
-        >
-          <Wand2 className="w-4 h-4 text-amber-400" />
-          <span>Gerador Autônomo IA</span>
-        </button>
-
-        {/* Auditoria ABNT */}
-        <button
-          type="button"
-          onClick={() => handleTabClick('auditoria')}
-          className={`flex items-center gap-2 py-2.5 px-3.5 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
-            isTabActive('auditoria')
-              ? 'border-indigo-500 text-indigo-300 bg-indigo-500/10'
-              : 'border-transparent text-indigo-400/90 hover:text-indigo-200 hover:border-indigo-500/30'
-          }`}
-        >
-          <ShieldCheck className="w-4 h-4 text-indigo-400" />
-          <span>Auditoria ABNT</span>
-        </button>
-
-        {/* Scripts & CLI */}
-        <button
-          type="button"
-          onClick={() => handleTabClick('scripts')}
-          className={`flex items-center gap-2 py-2.5 px-3.5 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
-            isTabActive('scripts')
-              ? 'border-emerald-500 text-emerald-300 bg-emerald-500/10'
-              : 'border-transparent text-emerald-400/90 hover:text-emerald-200 hover:border-emerald-500/30'
-          }`}
-        >
-          <Terminal className="w-4 h-4 text-emerald-400" />
-          <span>Scripts & CLI</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={handleAIAssistantClick}
-          className={`flex items-center gap-2 py-2.5 px-4 text-xs font-medium border-b-2 transition-all whitespace-nowrap ml-auto ${
-            isTabActive('assistente_ia')
-              ? 'border-amber-400 text-amber-300 bg-amber-500/10'
-              : 'border-transparent text-amber-400 hover:text-amber-200 hover:border-amber-400/50'
-          }`}
-        >
-          <Sparkles className="w-4 h-4 text-amber-400" />
-          <span>Chat com IA</span>
-        </button>
-      </div>
 
       {/* ABNT Norms Guidelines Modal */}
       {showABNTGuide && (

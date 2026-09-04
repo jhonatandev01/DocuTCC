@@ -3,13 +3,15 @@ import { Download, Smartphone, Share, PlusSquare, Check, X, Laptop } from 'lucid
 import { usePWAInstall } from '../hooks/usePWAInstall';
 
 interface PWAInstallButtonProps {
-  variant?: 'compact' | 'full' | 'banner';
+  variant?: 'compact' | 'full' | 'banner' | 'menu-item';
   className?: string;
+  onAfterClick?: () => void;
 }
 
 export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
   variant = 'compact',
   className = '',
+  onAfterClick,
 }) => {
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
   const [showIOSGuide, setShowIOSGuide] = useState(false);
@@ -18,6 +20,21 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
   // If already running as an installed PWA (standalone mode), hide or show badge
   if (isInstalled) {
     if (variant === 'banner') return null;
+    if (variant === 'menu-item') {
+      return (
+        <div className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs bg-emerald-950/40 text-emerald-300 border border-emerald-800/40 ${className}`}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+              <Check className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="font-semibold text-emerald-200">Web App Instalado</div>
+              <div className="text-[10px] text-emerald-400/80">Rodando em modo autônomo</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
     return (
       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-950/60 text-emerald-400 border border-emerald-700/50 ${className}`}>
         <Check className="w-3.5 h-3.5" />
@@ -27,6 +44,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
   }
 
   const handleInstallClick = async () => {
+    if (onAfterClick) onAfterClick();
     if (isIOS) {
       setShowIOSGuide(true);
       return;
@@ -65,6 +83,27 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
             <span>Instalar Aplicativo</span>
           </button>
         </div>
+      ) : variant === 'menu-item' ? (
+        <button
+          type="button"
+          onClick={handleInstallClick}
+          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium text-slate-200 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer group ${className}`}
+          title="Instalar DocuTCC como aplicativo nativo (PWA) no seu celular, tablet ou PC"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-amber-500/15 text-amber-400 flex items-center justify-center group-hover:bg-amber-500/25 shrink-0 transition-colors">
+              <Smartphone className="w-4 h-4" />
+            </div>
+            <div className="text-left">
+              <div className="font-semibold text-slate-100 flex items-center gap-1.5">
+                <span>Instalar Web App (PWA)</span>
+                <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-mono">App</span>
+              </div>
+              <div className="text-[10px] text-slate-400 font-normal">Acesse offline e em tela cheia no PC ou celular</div>
+            </div>
+          </div>
+          <Download className="w-3.5 h-3.5 text-amber-400/70 group-hover:text-amber-400 shrink-0" />
+        </button>
       ) : (
         <button
           type="button"

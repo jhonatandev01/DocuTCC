@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
+import { HomeScreen } from './components/HomeScreen';
 import { ProjectMetadataEditor } from './components/ProjectMetadataEditor';
 import { SectionEditor } from './components/SectionEditor';
 import { CitationsManager } from './components/CitationsManager';
@@ -9,7 +10,7 @@ import { AIAcademicAssistant } from './components/AIAcademicAssistant';
 import { AutonomousTCCGenerator } from './components/AutonomousTCCGenerator';
 import { ABNTAuditor } from './components/ABNTAuditor';
 import { ScriptsAutomationCenter } from './components/ScriptsAutomationCenter';
-import { InteractiveTutorial, WelcomeBanner } from './components/InteractiveTutorial';
+import { InteractiveTutorial } from './components/InteractiveTutorial';
 import {
   BookOpen,
   FileText,
@@ -19,6 +20,8 @@ import {
   Wand2,
   Sparkles,
   Compass,
+  Home,
+  Plus,
 } from 'lucide-react';
 import { TCCProject, ViewTab } from './types';
 import { sampleMonograph, sampleArticle, sampleTechnicalTCC } from './data/sampleProjects';
@@ -31,7 +34,8 @@ import {
 export default function App() {
   const [project, setProject] = useState<TCCProject>(() => getInitialProject());
 
-  const [activeTab, setActiveTab] = useState<ViewTab>('preview');
+  // Default to clean HomeScreen (Google Docs / Canva style Hub)
+  const [activeTab, setActiveTab] = useState<ViewTab>('inicio');
 
   // AI assistant prompt transfer
   const [aiAssistantPrompt, setAiAssistantPrompt] = useState<string>('');
@@ -39,35 +43,8 @@ export default function App() {
 
   const [saveStatus, setSaveStatus] = useState<string>('');
 
-  // Interactive Tutorial state (non-mandatory, shown upon opening system on first visit)
+  // Interactive Tutorial modal state (accessible via the Header Menu)
   const [showTutorial, setShowTutorial] = useState<boolean>(false);
-  const [showWelcomeBanner, setShowWelcomeBanner] = useState<boolean>(false);
-
-  useEffect(() => {
-    try {
-      const seen = localStorage.getItem('docutcc_tutorial_seen');
-      if (!seen) {
-        setShowWelcomeBanner(true);
-      }
-    } catch {
-      // In private browsing or restricted iframe
-    }
-  }, []);
-
-  const handleStartTutorial = () => {
-    setShowWelcomeBanner(false);
-    setShowTutorial(true);
-    try {
-      localStorage.setItem('docutcc_tutorial_seen', 'true');
-    } catch {}
-  };
-
-  const handleDismissWelcomeBanner = () => {
-    setShowWelcomeBanner(false);
-    try {
-      localStorage.setItem('docutcc_tutorial_seen', 'true');
-    } catch {}
-  };
 
   // Load from high-capacity IndexedDB on initial mount
   useEffect(() => {
@@ -207,6 +184,12 @@ export default function App() {
     }
   };
 
+  // Start fresh blank project and navigate directly to editor
+  const handleNewBlankProject = () => {
+    handleLoadTemplate('novo-em-branco');
+    setActiveTab('secoes');
+  };
+
   // Trigger Print
   const handlePrint = () => {
     setActiveTab('preview');
@@ -216,7 +199,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-amber-500/30 selection:text-amber-200">
+    <div className="min-h-screen bg-mesh text-slate-100 flex flex-col selection:bg-amber-500/30 selection:text-amber-200">
       {/* Header */}
       <Header
         activeTab={activeTab}
@@ -229,16 +212,9 @@ export default function App() {
         onImportJSON={handleImportJSON}
         onPrint={handlePrint}
         onLoadTemplate={handleLoadTemplate}
+        onNewBlankProject={handleNewBlankProject}
         onOpenTutorial={() => setShowTutorial(true)}
       />
-
-      {/* Non-mandatory Welcome Tutorial Banner (shown once on first visit) */}
-      {showWelcomeBanner && (
-        <WelcomeBanner
-          onStartTutorial={handleStartTutorial}
-          onDismiss={handleDismissWelcomeBanner}
-        />
-      )}
 
       {/* Interactive Step-by-Step Tutorial Modal */}
       <InteractiveTutorial
@@ -250,6 +226,23 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 pb-20 md:pb-8">
+        {/* Clean Home Screen (Google Docs / Canva style Hub) */}
+        {activeTab === 'inicio' && (
+          <div className="animate-in fade-in duration-200">
+            <HomeScreen
+              project={project}
+              onOpenEditor={(tab = 'secoes') => setActiveTab(tab)}
+              onNewBlankProject={handleNewBlankProject}
+              onLoadTemplate={(templateId) => {
+                handleLoadTemplate(templateId);
+                setActiveTab('secoes');
+              }}
+              onOpenTutorial={() => setShowTutorial(true)}
+              onOpenGuidelines={() => setActiveTab('metadata')}
+            />
+          </div>
+        )}
+
         {activeTab === 'metadata' && (
           <div className="animate-in fade-in duration-200">
             <ProjectMetadataEditor project={project} onChange={setProject} />
@@ -332,18 +325,18 @@ export default function App() {
         )}
       </main>
 
-      {/* Mobile Bottom Navigation Bar (Mobile only: touch-friendly tabs) */}
+      {/* Mobile Bottom Navigation Bar (Direct Document Editing tabs) */}
       <nav
         id="docutcc-mobile-bottom-bar"
         className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-1 py-1 flex items-center justify-around shadow-2xl"
       >
         {[
+          { key: 'inicio' as ViewTab, label: 'Início', icon: Home },
           { key: 'metadata' as ViewTab, label: 'Capa', icon: BookOpen },
           { key: 'secoes' as ViewTab, label: 'Capítulos', icon: FileText },
           { key: 'citacoes' as ViewTab, label: 'Citações', icon: Bookmark },
           { key: 'referencias_cruzadas' as ViewTab, label: 'Figuras', icon: Layers },
           { key: 'preview' as ViewTab, label: 'A4 Real', icon: Eye },
-          { key: 'gerador_ia' as ViewTab, label: 'Gerar IA', icon: Wand2 },
         ].map((item) => {
           const IconComponent = item.icon;
           const isActive =

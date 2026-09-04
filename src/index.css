@@ -71,6 +71,74 @@
   background: rgba(148, 163, 184, 0.6);
 }
 
+/* Custom subtle glow & shimmer animations */
+@keyframes aiGlowPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px -2px rgba(168, 85, 247, 0.35), 0 0 30px -4px rgba(168, 85, 247, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 28px 2px rgba(168, 85, 247, 0.6), 0 0 45px 0 rgba(168, 85, 247, 0.25);
+  }
+}
+
+@keyframes subtleShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-ai-glow {
+  animation: aiGlowPulse 3s ease-in-out infinite;
+}
+
+.ai-shimmer-border {
+  background: linear-gradient(90deg, rgba(168, 85, 247, 0.4), rgba(244, 63, 94, 0.4), rgba(56, 189, 248, 0.4), rgba(168, 85, 247, 0.4));
+  background-size: 200% 100%;
+  animation: subtleShimmer 6s linear infinite;
+}
+
+/* Immersive background */
+@keyframes meshGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.bg-mesh {
+  background: radial-gradient(circle at 15% 50%, rgba(168, 85, 247, 0.05), transparent 25%),
+              radial-gradient(circle at 85% 30%, rgba(56, 189, 248, 0.05), transparent 25%),
+              radial-gradient(circle at 50% 80%, rgba(245, 158, 11, 0.05), transparent 25%);
+  background-size: 200% 200%;
+  animation: meshGradient 20s ease infinite;
+  background-color: #020617; /* slate-950 */
+}
+
+/* Glassmorphism utilities */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+.glass-panel-heavy {
+  background: rgba(2, 6, 23, 0.75);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
 /* Print configuration according to ABNT NBR 14724 */
 @media print {
   @page {

@@ -282,7 +282,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       {/* LEFT COLUMN: Section Directory */}
-      <div className="lg:col-span-4 bg-slate-900/90 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
+      <div className="lg:col-span-4 glass-panel-heavy rounded-2xl overflow-hidden">
         <div className="p-4 border-b border-slate-800 bg-slate-950/60 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-amber-400" />
@@ -387,7 +387,7 @@ export const SectionEditor: React.FC<SectionEditorProps> = ({
 
       {/* RIGHT COLUMN: Active Section Editor */}
       {activeSection && (
-        <div className="lg:col-span-8 bg-slate-900/90 rounded-2xl border border-slate-800 shadow-xl overflow-hidden space-y-4">
+        <div className="lg:col-span-8 glass-panel-heavy rounded-2xl overflow-hidden space-y-4">
           {/* Section Heading & Controls */}
           <div className="p-4 border-b border-slate-800 bg-slate-950/60 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2 flex-1 min-w-[200px]">

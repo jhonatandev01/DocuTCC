@@ -223,6 +223,7 @@ export interface TCCGenerationRequest {
 }
 
 export type ViewTab =
+  | 'inicio'
   | 'metadata'
   | 'secoes'
   | 'citacoes'
