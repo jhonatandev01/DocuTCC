@@ -54,6 +54,8 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
       if (ok) {
         setInstallSuccess(true);
         setTimeout(() => setInstallSuccess(false), 4000);
+      } else {
+        setShowIOSGuide(true);
       }
     } else {
       // If browser doesn't support direct prompt (or in development iframe), show helpful modal

@@ -421,7 +421,6 @@ Certifique-se de produzir textos ricos e volumosos, sem abreviações ou simplif
       systemInstruction,
       temperature: 0.35,
       responseMimeType: "application/json",
-      tools: [{ googleSearch: {} }],
     });
 
     const parsed = cleanAndParseJSON(rawCallResult.text || "{}");
@@ -698,7 +697,6 @@ Retorne APENAS o JSON válido.`;
       systemInstruction,
       temperature: 0.2,
       responseMimeType: "application/json",
-      tools: [{ googleSearch: {} }],
     });
 
     const parsed = cleanAndParseJSON(rawResponse || "{}");
