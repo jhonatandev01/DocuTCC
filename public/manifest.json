@@ -1,0 +1,56 @@
+{
+  "id": "/",
+  "name": "DocuTCC - Plataforma de TCC e Normas ABNT",
+  "short_name": "DocuTCC",
+  "description": "Plataforma avançada para elaboração de TCC e trabalhos acadêmicos com formatação automática nas normas ABNT.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#090d16",
+  "background_color": "#090d16",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["education", "productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Capítulos & Conteúdo",
+      "url": "/?tab=secoes",
+      "description": "Acessar o editor acadêmico de capítulos"
+    },
+    {
+      "name": "Visualização ABNT (A4)",
+      "url": "/?tab=preview",
+      "description": "Visualizar documento formatado para impressão"
+    },
+    {
+      "name": "Gerador Autônomo IA",
+      "url": "/?tab=gerador_ia",
+      "description": "Gerar TCC completo com inteligência artificial"
+    }
+  ]
+}

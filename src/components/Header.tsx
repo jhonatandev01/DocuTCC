@@ -18,10 +18,15 @@ import {
   Database,
   ChevronDown,
   Check,
+  Compass,
+  Menu,
+  X,
+  Smartphone,
 } from 'lucide-react';
 import { TCCProject, ViewTab } from '../types';
 import { getProjectStatistics } from '../utils/abntFormatter';
 import { exportProjectToDocx } from '../utils/exportDocx';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface HeaderProps {
   project: TCCProject;
@@ -36,6 +41,7 @@ interface HeaderProps {
   onImportJSON: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onOpenGuidelines?: () => void;
   onOpenAIAssistant?: () => void;
+  onOpenTutorial?: () => void;
   onLoadTemplate: (templateId: string) => void;
   isGeneratingPDF?: boolean;
 }
@@ -53,6 +59,7 @@ export const Header: React.FC<HeaderProps> = ({
   onImportJSON,
   onOpenGuidelines,
   onOpenAIAssistant,
+  onOpenTutorial,
   onLoadTemplate,
   isGeneratingPDF = false,
 }) => {
@@ -60,6 +67,7 @@ export const Header: React.FC<HeaderProps> = ({
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [showABNTGuide, setShowABNTGuide] = React.useState<boolean>(false);
   const [showBackupMenu, setShowBackupMenu] = React.useState<boolean>(false);
+  const [showMobileMenu, setShowMobileMenu] = React.useState<boolean>(false);
   const [isExportingDocx, setIsExportingDocx] = React.useState<boolean>(false);
 
   const handleDownloadDocx = async () => {
@@ -125,8 +133,8 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
         {/* Brand & Project Name */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 text-white shadow-md shadow-amber-900/30">
-            <BookOpen className="w-5 h-5" />
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-950 border border-amber-500/40 p-0.5 shadow-md shadow-amber-900/30 overflow-hidden shrink-0">
+            <img src="/icon.svg" alt="DocuTCC Logo" className="w-full h-full object-cover rounded-lg" />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -137,13 +145,13 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </h1>
             </div>
-            <p className="text-xs text-slate-400 truncate max-w-xs sm:max-w-md">
+            <p className="text-xs text-slate-400 truncate max-w-[180px] sm:max-w-xs md:max-w-md">
               {project.title || 'Novo Trabalho de Conclusão de Curso'}
             </p>
           </div>
         </div>
 
-        {/* Quick Stats */}
+        {/* Quick Stats (Desktop) */}
         <div className="hidden md:flex items-center gap-4 text-xs text-slate-300 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/60">
           <div className="flex items-center gap-1.5">
             <FileText className="w-3.5 h-3.5 text-amber-400" />
@@ -167,32 +175,48 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
-          {/* Load Model Dropdown */}
-          <select
-            onChange={(e) => {
-              if (e.target.value) {
-                onLoadTemplate(e.target.value);
-                e.target.value = '';
-              }
-            }}
-            defaultValue=""
-            className="text-xs bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 transition-colors cursor-pointer"
-            title="Carregar Modelo Acadêmico Pronto"
+          {/* Tutorial Interativo Button */}
+          <button
+            type="button"
+            onClick={onOpenTutorial}
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 hover:border-amber-500/60 transition-all shadow-sm cursor-pointer"
+            title="Tutorial Interativo: Aprenda a usar todas as funções do DocuTCC"
           >
-            <option value="" disabled>
-              📋 Modelos ABNT...
-            </option>
-            <option value="tcc-ia-diagnostico">Monografia Completa (Bacharelado)</option>
-            <option value="tcc-tecnico-automacao">TCC Técnico (Projeto Prático / Nível Médio)</option>
-            <option value="tcc-artigo-gestao">Artigo Científico ABNT (NBR 6022)</option>
-            <option value="novo-em-branco">Projeto em Branco (Novo)</option>
-          </select>
+            <Compass className="w-4 h-4 text-amber-400" />
+            <span className="hidden sm:inline">Tutorial</span>
+          </button>
+
+          {/* Web App Installation (PWA) Button */}
+          <PWAInstallButton variant="compact" />
+
+          {/* Load Model Dropdown (Desktop/Tablet) */}
+          <div className="hidden sm:block">
+            <select
+              onChange={(e) => {
+                if (e.target.value) {
+                  onLoadTemplate(e.target.value);
+                  e.target.value = '';
+                }
+              }}
+              defaultValue=""
+              className="text-xs bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 transition-colors cursor-pointer"
+              title="Carregar Modelo Acadêmico Pronto"
+            >
+              <option value="" disabled>
+                📋 Modelos ABNT...
+              </option>
+              <option value="tcc-ia-diagnostico">Monografia Completa (Bacharelado)</option>
+              <option value="tcc-tecnico-automacao">TCC Técnico (Projeto Prático / Nível Médio)</option>
+              <option value="tcc-artigo-gestao">Artigo Científico ABNT (NBR 6022)</option>
+              <option value="novo-em-branco">Projeto em Branco (Novo)</option>
+            </select>
+          </div>
 
           {/* Real Save to Browser Storage */}
           <button
             type="button"
             onClick={onSaveLocally}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all shadow-sm cursor-pointer ${
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all shadow-sm cursor-pointer ${
               saveStatus
                 ? 'bg-emerald-600/90 text-white border-emerald-500 shadow-emerald-950/40'
                 : 'bg-slate-800 hover:bg-slate-700 text-slate-100 border-slate-700 hover:border-slate-600'
@@ -204,7 +228,7 @@ export const Header: React.FC<HeaderProps> = ({
             ) : (
               <Save className="w-4 h-4 text-emerald-400" />
             )}
-            <span className="font-medium">{saveStatus || 'Salvar'}</span>
+            <span className="hidden sm:inline font-medium">{saveStatus || 'Salvar'}</span>
           </button>
 
           {/* Export Word (.docx) ABNT */}
@@ -212,29 +236,29 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             onClick={handleDownloadDocx}
             disabled={isExportingDocx}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600/90 hover:bg-blue-600 text-white border border-blue-500/50 hover:border-blue-400 transition-all shadow-sm disabled:opacity-50 cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600/90 hover:bg-blue-600 text-white border border-blue-500/50 hover:border-blue-400 transition-all shadow-sm disabled:opacity-50 cursor-pointer"
             title="Salvar/Exportar TCC para Microsoft Word (.docx) formatado segundo as normas ABNT"
           >
             <FileText className="w-4 h-4 text-blue-200" />
             <span className="hidden sm:inline">
-              {isExportingDocx ? 'Gerando .docx...' : 'Exportar Word'}
+              {isExportingDocx ? 'Gerando...' : 'Exportar Word'}
             </span>
-            <span className="text-[10px] px-1 py-0.2 rounded bg-blue-700/80 font-mono text-blue-200">
+            <span className="text-[10px] px-1 py-0.2 rounded bg-blue-700/80 font-mono text-blue-200 hidden xs:inline">
               .docx
             </span>
           </button>
 
-          {/* Export PDF direct */}
+          {/* Export PDF direct (Desktop) */}
           <button
             type="button"
             onClick={handleDownloadPDFClick}
             disabled={isGeneratingPDF}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 hover:border-slate-600 transition-all shadow-sm disabled:opacity-50 cursor-pointer"
+            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700 hover:border-slate-600 transition-all shadow-sm disabled:opacity-50 cursor-pointer"
             title="Baixar arquivo PDF formatado ABNT"
           >
             <Download className="w-4 h-4 text-amber-400" />
-            <span className="hidden sm:inline">
-              {isGeneratingPDF ? 'Gerando...' : 'Baixar PDF'}
+            <span>
+              {isGeneratingPDF ? 'Gerando...' : 'PDF'}
             </span>
           </button>
 
@@ -242,11 +266,21 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             type="button"
             onClick={onPrint}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 transition-all shadow-sm font-medium cursor-pointer"
+            className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 transition-all shadow-sm font-medium cursor-pointer"
             title="Imprimir ou Salvar em PDF (alta fidelidade)"
           >
             <Printer className="w-4 h-4 text-slate-950" />
-            <span className="hidden sm:inline">Imprimir / PDF</span>
+            <span className="hidden lg:inline">Imprimir / PDF</span>
+          </button>
+
+          {/* Mobile Menu Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            className="md:hidden flex items-center justify-center p-2 rounded-lg bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white border border-slate-700 transition-colors cursor-pointer"
+            title="Menu Completo"
+          >
+            {showMobileMenu ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
 
           {/* Technical Backup & Restore Menu (.json) */}
@@ -326,6 +360,125 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Mobile Menu Dropdown / Drawer (Mobile only) */}
+      {showMobileMenu && (
+        <div className="md:hidden border-t border-slate-800 bg-slate-900/98 backdrop-blur-xl px-4 py-3 space-y-3 animate-in slide-in-from-top-3 duration-200 shadow-2xl">
+          {/* Quick Stats on Mobile */}
+          <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs">
+            <div className="flex items-center gap-1.5 text-slate-300">
+              <FileText className="w-3.5 h-3.5 text-amber-400" />
+              <span>~{stats.estimatedPages} págs. ({stats.wordCount.toLocaleString('pt-BR')} palavras)</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-slate-300">
+              <Bookmark className="w-3.5 h-3.5 text-blue-400" />
+              <span>{stats.totalReferences} refs | {stats.totalFigures + stats.totalTables} figuras</span>
+            </div>
+          </div>
+
+          {/* Modelos ABNT Select (Mobile) */}
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+              Carregar Modelo Acadêmico:
+            </label>
+            <select
+              onChange={(e) => {
+                if (e.target.value) {
+                  onLoadTemplate(e.target.value);
+                  setShowMobileMenu(false);
+                  e.target.value = '';
+                }
+              }}
+              defaultValue=""
+              className="w-full text-xs bg-slate-800 text-slate-200 border border-slate-700 rounded-xl p-2.5 focus:border-amber-500"
+            >
+              <option value="" disabled>📋 Selecionar Modelo ABNT...</option>
+              <option value="tcc-ia-diagnostico">Monografia Completa (Bacharelado)</option>
+              <option value="tcc-tecnico-automacao">TCC Técnico (Projeto Prático)</option>
+              <option value="tcc-artigo-gestao">Artigo Científico ABNT (NBR 6022)</option>
+              <option value="novo-em-branco">Projeto em Branco (Novo)</option>
+            </select>
+          </div>
+
+          {/* Tabs Direct List for Mobile */}
+          <div className="space-y-1 pt-1">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block px-1">
+              Navegar nas Seções:
+            </span>
+            {[
+              { key: 'metadata' as ViewTab, label: 'Capa & Dados ABNT', icon: BookOpen, color: 'text-amber-400' },
+              { key: 'secoes' as ViewTab, label: 'Capítulos & Conteúdo', icon: FileText, color: 'text-sky-400' },
+              { key: 'citacoes' as ViewTab, label: `Citações & NBR 6023 (${project.references.length})`, icon: Bookmark, color: 'text-blue-400' },
+              { key: 'referencias_cruzadas' as ViewTab, label: `Figuras & Tabelas (${project.crossReferences.length})`, icon: Layers, color: 'text-emerald-400' },
+              { key: 'preview' as ViewTab, label: 'Visualização ABNT (A4)', icon: Eye, color: 'text-amber-400' },
+              { key: 'gerador_ia' as ViewTab, label: 'Gerador Autônomo IA', icon: Wand2, color: 'text-amber-300' },
+              { key: 'auditoria' as ViewTab, label: 'Auditoria ABNT', icon: ShieldCheck, color: 'text-indigo-400' },
+              { key: 'scripts' as ViewTab, label: 'Scripts & CLI', icon: Terminal, color: 'text-emerald-400' },
+              { key: 'assistente_ia' as ViewTab, label: 'Chat com IA Especialista', icon: Sparkles, color: 'text-amber-400' },
+            ].map((item) => {
+              const IconComp = item.icon;
+              const active = isTabActive(item.key);
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => {
+                    handleTabClick(item.key);
+                    setShowMobileMenu(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all min-h-[44px] cursor-pointer ${
+                    active
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  }`}
+                >
+                  <IconComp className={`w-4 h-4 ${item.color}`} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Quick Actions Footer inside Drawer */}
+          <div className="pt-2 border-t border-slate-800 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setShowMobileMenu(false);
+                if (onOpenTutorial) onOpenTutorial();
+              }}
+              className="flex-1 min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-amber-500/15 text-amber-300 border border-amber-500/30 text-xs font-bold"
+            >
+              <Compass className="w-4 h-4 text-amber-400" />
+              <span>Tutorial</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowMobileMenu(false);
+                handleGuidelinesClick();
+              }}
+              className="flex-1 min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-slate-800 text-slate-200 border border-slate-700 text-xs font-semibold"
+            >
+              <HelpCircle className="w-4 h-4 text-amber-400" />
+              <span>Guia ABNT</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowMobileMenu(false);
+                handleDownloadPDFClick();
+              }}
+              className="flex-1 min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-slate-800 text-amber-300 border border-slate-700 text-xs font-semibold"
+            >
+              <Download className="w-4 h-4 text-amber-400" />
+              <span>Baixar PDF</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Navigation Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-1 overflow-x-auto border-t border-slate-800/80 scrollbar-none">

@@ -27,10 +27,26 @@ export const ABNTDocumentPreview: React.FC<ABNTDocumentPreviewProps> = ({
   project,
   onPrint,
 }) => {
-  const [zoom, setZoom] = useState<number>(100);
+  const [zoom, setZoom] = useState<number>(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      return Math.min(100, Math.max(42, Math.round(((window.innerWidth - 32) / 800) * 100)));
+    }
+    return 100;
+  });
   const [isExportingPDF, setIsExportingPDF] = useState<boolean>(false);
   const [isExportingDocx, setIsExportingDocx] = useState<boolean>(false);
   const documentRef = useRef<HTMLDivElement>(null);
+
+  // Auto-fit on window resize for mobile ergonomics
+  React.useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768 && zoom > 70) {
+        setZoom(Math.min(100, Math.max(42, Math.round(((window.innerWidth - 32) / 800) * 100))));
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [zoom]);
 
   const toc = computeTableOfContents(project);
   const figures = project.crossReferences.filter((r) => r.type === 'figura');
@@ -157,6 +173,18 @@ export const ABNTDocumentPreview: React.FC<ABNTDocumentPreviewProps> = ({
               title="Resetar para 100%"
             >
               100%
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const screenW = window.innerWidth;
+                const targetScale = Math.min(100, Math.max(40, Math.round(((screenW - 48) / 800) * 100)));
+                setZoom(targetScale);
+              }}
+              className="px-1.5 py-0.5 hover:text-white text-[10px] text-slate-300 hover:text-amber-300 font-medium border-l border-slate-700 pl-2"
+              title="Ajustar automaticamente à largura da tela do aparelho"
+            >
+              Ajustar
             </button>
           </div>
 
